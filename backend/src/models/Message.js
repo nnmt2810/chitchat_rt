@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { required } from "zod/mini";
+import { maxLength, required } from "zod/mini";
 
 const messageSchema = new mongoose.Schema(
     {
@@ -15,6 +15,8 @@ const messageSchema = new mongoose.Schema(
         },
         text: {
             type: String,
+            trim: true,
+            maxLength: 2000,
         },
         image: {
             type: String,
