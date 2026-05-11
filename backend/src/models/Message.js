@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { maxLength, required } from "zod/mini";
 
 const messageSchema = new mongoose.Schema(
     {
