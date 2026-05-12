@@ -65,8 +65,8 @@ export const useChatStore = create((set, get) => ({
         // Optimistic UI update
         const optimisticMessage = {
             _id: tempId,
-            sender: authUser._id,
-            receiver: selectedUser._id,
+            senderId: authUser._id,
+            receiverId: selectedUser._id,
             text: messageData.text,
             image: messageData.image,
             createdAt: new Date().toISOString(),
