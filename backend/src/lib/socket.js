@@ -14,15 +14,17 @@ const io = new Server(server, {
     },
 });
 
-// apply authentication middleware
-io.use((socketAuthMiddleware));
+io.use(socketAuthMiddleware);
 
-// storing online users
 const userSocketMap = {}; // userId -> socket.id
+
+export function getReceiverSocketId(userId) {
+    return userSocketMap[userId];
+}
 
 io.on('connection', (socket) => {
     console.log('A user connected: ' + socket.user.fullName);
-    
+
     const userId = socket.userId;
     userSocketMap[userId] = socket.id;
 

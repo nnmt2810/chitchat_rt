@@ -77,10 +77,31 @@ export const useChatStore = create((set, get) => ({
 
         try {
             const res = await axiosInstance.post(`/messages/send/${selectedUser?._id}`, messageData);
-            set({messages: messages.concat(res.data)});
+            set({ messages: get().messages.map(msg => msg._id === tempId ? res.data : msg) });
         } catch (error) {
             set({messages: messages.filter(msg => msg._id !== tempId)}); // Remove the optimistic message   
             toast.error(error.response?.data?.message || "Failed to send message");
         }
+    },
+
+    subscribeToMessages: () => {
+        const { selectedUser } = get();
+        if (!selectedUser) return;
+
+        const socket = useAuthStore.getState().socket;
+        if (!socket) return;
+
+        socket.on('newMessage', (newMessage) => {
+            const isFromSelectedUser = newMessage.senderId === selectedUser._id;
+            if (!isFromSelectedUser) return;
+
+            set({ messages: [...get().messages, newMessage] });
+        });
+    },
+
+    unsubscribeFromMessages: () => {
+        const socket = useAuthStore.getState().socket;
+        if (!socket) return;
+        socket.off('newMessage');
     },
 }));
