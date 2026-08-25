@@ -16,24 +16,49 @@ const io = new Server(server, {
 
 io.use(socketAuthMiddleware);
 
-const userSocketMap = {}; // userId -> socket.id
+// userId -> Set of socket IDs
+const userSocketMap = new Map();
 
-export function getReceiverSocketId(userId) {
-    return userSocketMap[userId];
+export function getReceiverSocketIds(userId) {
+    return userSocketMap.get(userId) || [];
 }
 
 io.on('connection', (socket) => {
     console.log('A user connected: ' + socket.user.fullName);
 
     const userId = socket.userId;
-    userSocketMap[userId] = socket.id;
 
-    io.emit('getOnlineUsers', Object.keys(userSocketMap));
+    // Get existing sockets of this user
+    let socketIds = userSocketMap.get(userId);
+
+    // First connection of this user
+    if (!socketIds) {
+        socketIds = new Set();
+        userSocketMap.set(userId, socketIds);
+    }
+
+    // Add this connection
+    socketIds.add(socket.id);
+
+    // Send updated online users
+    io.emit('getOnlineUsers', Array.from(userSocketMap.keys()));
 
     socket.on('disconnect', () => {
         console.log('A user disconnected: ' + socket.user.fullName);
-        delete userSocketMap[userId];
-        io.emit('getOnlineUsers', Object.keys(userSocketMap));
+
+        const socketIds = userSocketMap.get(userId);
+
+        if (!socketIds) return;
+
+        // Remove only this socket
+        socketIds.delete(socket.id);
+
+        // User is offline only when all sockets are disconnected
+        if (socketIds.size === 0) {
+            userSocketMap.delete(userId);
+        }
+
+        io.emit('getOnlineUsers', Array.from(userSocketMap.keys()));
     });
 });
 
